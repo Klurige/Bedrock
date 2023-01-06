@@ -1,0 +1,29 @@
+#!/bin/bash -e
+
+OTA_PRIVKEY="./private.key"
+TARGET_IP=$(grep "upload_port = [[:digit:]]" platformio.ini | cut -d "=" -f 2 | tr -d " \"")
+TIMESTAMP=html/.latest_upload
+WEBUSER=$(grep WebUser config | cut -d "#" -f 1 | cut -d "=" -f 2 | tr -d " \"")
+WEBPWD=$(grep WebPassword config | cut -d "#" -f 1 | cut -d "=" -f 2 | tr -d " \"")
+
+uploadFile() {
+    echo "Uploading ${1}"
+    SIGNATURE=$(openssl dgst -sha256 -sign ${OTA_PRIVKEY} "${1}" | openssl base64 -A)
+    curl -X POST -u "${WEBUSER}":"${WEBPWD}" --digest -F "image=@${1}" -F "signature=${SIGNATURE}" http://${TARGET_IP}/upload
+    echo
+}
+
+if [[ "${1}" != "" ]]; then
+    uploadFile "${1}"
+else
+    FILES=$(find -L html -type f)
+
+    for FILE in ${FILES}; do
+        if [[ ! -f ${TIMESTAMP} || "${FILE}" -nt "${TIMESTAMP}" ]]; then
+            uploadFile "${FILE}"
+        fi
+    done
+
+    touch ${TIMESTAMP}
+fi
+echo "Done uploading."

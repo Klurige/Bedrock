@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/svg" href="/favicon.svg" />
+    <link rel="stylesheet" href="app.css">
+</head>
+
+<body onLoad="onLoad()">
+    <h1>%TARGETNAME%</h1>
+    <p>Change the switch to turn on or off the blue led.</p>
+    <p>The counter is capped between 900 and 1100.</p>
+    <h2>MQTT</h2>
+    <h3>Subscribe</h3>
+    <dl>
+        <dt>Count direction</dt>
+        <dd>%MQTTCLIENTID%/count_dir_state/#</dd>
+        <br>
+        <dt>Count value</dt>
+        <dd>%MQTTCLIENTID%/measurement/#</dd>
+        <br>
+        <dt>LED state</dt>
+        <dd>%MQTTCLIENTID%/led_state/#</dd>
+        <br>
+
+    </dl>
+    <h3>Publish</h3>
+    <dt>Toggle the led</dt>
+    <dd>Subject: %MQTTCLIENTID%/led_set</dd>
+    <dd>Payload: "on" or "off"</dd>
+    <br>
+    <dt>Change count direction</dt>
+    <dd>Subject: %MQTTCLIENTID%/count_dir_set</dd>
+    <dd>Payload: "up" or "down"</dd>
+    </dl>
+    <h2>Web UI</h2>
+    <label class="switch">
+        <input type="checkbox" id="ledSwitch" onclick="toggleLed()">
+        <span class="slider round"></span>
+    </label>
+    <br>
+    <div>
+        <h2>
+            LED State: <span id="ledStatus">NA</span>
+        </h2>
+        <h2>
+            Count direction: <span id="countDir">NA</span>
+        </h2>
+    </div>
+    <div>
+        <h2>
+            Measurement: <span id="measurement">NA</span><br><br>
+        </h2>
+    </div>
+    <div>
+        Number of lost connections: <strong id="numLost">NA</strong>.
+    </div>
+    <script src="/app.js"></script>
+</body>
+
+</html>

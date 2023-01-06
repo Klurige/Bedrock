@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>ESP8266 File Upload</title>
+    <link rel="icon" type="image/svg" href="/favicon.svg" />
+</head>
+
+<body>
+
+    <h1>ESP8266 File Upload</h1>
+    <p>Select a new file to upload to the ESP8266. Existing files will be replaced.</p>
+    <div>
+        <form method="POST" action="upload" onsubmit="send(event,this)">
+            <input type="file" name="image"><br>
+            <label for="signature">Signature:</label><br>
+            <input type="text" id="signature" name="signature"><br><br>
+            <input class="button" type="submit" value="Upload">
+        </form>
+    </div>
+    <div>
+        <br><br>
+        Result: <span id="upload_result">NA</span><br><br>
+    </div>
+
+    <script>
+        const upload_result_messages = [
+            "Upload Successful",
+            "Signature is missing.",
+            "File cannot be found.",
+            "Wrong signature length.",
+            "Wrong signature.",
+            "Couldn't move file.",
+            "Couldn't find file in '/unverified'."
+        ];
+
+        function send(e, form) {
+            fetch(form.action, { method: 'post', body: new FormData(form) })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data.upload_result);
+                    document.getElementById("upload_result").innerHTML = upload_result_messages[-data.upload_result];
+                })
+                .catch(console.error);
+            e.preventDefault();
+        }
+    </script>
+
+</body>
+
+</html>

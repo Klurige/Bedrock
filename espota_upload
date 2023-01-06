@@ -1,0 +1,73 @@
+#!/bin/bash -e
+
+# Colors & helpers
+GREEN="\033[0;32m"
+RED="\033[0;31m"
+CLEAR="\033[0m"
+
+green() { echo -e "${GREEN}"$@"${CLEAR}"; }
+red() { echo >&2 -e "${RED}"$@"${CLEAR}"; }
+
+# Binary paths
+SIGNING_BIN="$HOME/.platformio/packages/framework-arduinoespressif8266/tools/signing.py"
+UPLOADER_BIN="$HOME/.platformio/packages/framework-arduinoespressif8266/tools/espota.py"
+OTA_SERVER=""
+TARGET_IP=""
+WEBUSER=$(grep WebUser config | cut -d "#" -f 1 | cut -d "=" -f 2 | tr -d " \"")
+WEBPWD=$(grep WebPassword config | cut -d "#" -f 1 | cut -d "=" -f 2 | tr -d " \"")
+
+# Parse arguments
+
+while (("$#")); do
+    case "$1" in
+    --ota-sign-private)
+        OTA_PRIVKEY=$2
+        shift 2
+        ;;
+    --upload-built-binary)
+        OTA_BIN=$2
+        shift 2
+        ;;
+    --server)
+        OTA_SERVER=$2
+        shift 2
+        ;;
+    --ip)
+        TARGET_IP=$2
+        shift 2
+        ;;
+    *)
+        BYPASS_PARAMS="$BYPASS_PARAMS $1"
+        shift
+        ;;
+    esac
+done
+
+echo "OTA_PRIVKEY = ${OTA_PRIVKEY}"
+echo "OTA_BIN = ${OTA_BIN}"
+echo "OTA_SERVER = ${OTA_SERVER}"
+echo "TARGET_IP = ${TARGET_IP}"
+echo "TARGET_PORT = ${TARGET_PORT}"
+echo "WEBUSER = ${WEBUSER}"
+echo "WEBPWD = ${WEBPWD}"
+echo "BYPASS = ${BYPASS_PARAMS}"
+
+SIGNATURE_FILE=$(mktemp --dry-run)
+openssl dgst -sha256 -sign "${OTA_PRIVKEY}" -out "${SIGNATURE_FILE}" .pio/build/d1_mini/firmware.bin
+SIGNATURE=$(openssl base64 -A --in "${SIGNATURE_FILE}")
+rm "${SIGNATURE_FILE}"
+
+if [[ "${OTA_SERVER}" != "" ]]; then
+    # Push firmware to intermediate host (pi)
+    scp .pio/build/d1_mini/firmware.bin "${OTA_SERVER}":/tmp/firmware.bin
+    UPLOAD_RESULT=$(ssh "${OTA_SERVER}" curl -X POST -u "${WEBUSER}":"${WEBPWD}" --digest -F "image=@/tmp/firmware.bin" -F "signature=${SIGNATURE}" http://${WEBUSER}:${WEBPWD}@${TARGET_IP}/upload)
+    #ssh "${OTA_SERVER}" rm -f /tmp/firmware.bin
+else
+    UPLOAD_RESULT=$(curl -X POST -u "${WEBUSER}":"${WEBPWD}" --digest -F "image=@.pio/build/d1_mini/firmware.bin" -F "signature=${SIGNATURE}" http://${WEBUSER}:${WEBPWD}@${TARGET_IP}/upload)
+fi
+RESULT_CODE=$(echo "${UPLOAD_RESULT}" | tr -d "{}\"" | cut -d ":" -f 2)
+if [[ ${RESULT_CODE} -eq 0 ]]; then
+    green "Uploaded."
+else
+    red "Uploading failed."
+fi

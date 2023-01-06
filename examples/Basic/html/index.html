@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/svg" href="/favicon.svg" />
+    <link rel="stylesheet" href="/index.css">
+    <title>ESP8266</title>
+</head>
+
+<body>
+    <h1>%TARGETNAME%</h1>
+    <div id="btns">
+        <button class="btn" type="button" onClick="startApp()"><span>App</span></button>
+        <br>
+        <button class="btn" type="button" onClick="uploadFile()"><span>Upload</span></button>
+        <br>
+        <button class="btn" type="button" onClick="logHistory()"><span>Show Log</span></button>
+        <br>
+        <button class="btn" type="button" onClick="listContents()"><span>Dump FS</span></button>
+        <br>
+        <button class="btn" type="button" onClick="settings()"><span>Settings</span></button>
+        <br>
+        <button class="btn" onClick="restart('factoryReset')"><span>Factory Reset</span></button>
+        <button class="btn" onClick="restart('reboot')"><span>Reboot</span></button>
+        <button class="btn" onClick="logout()"><span>Logout</span></button>
+    </div>
+    <div id="countDown">
+        You should be automatically redirected in <span id="seconds">x</span> seconds.
+    </div>
+
+    <p>Build ID: %VERSION%</p>
+    <p>Build Time: %BUILD_TIMESTAMP%</p>
+    <p>Boot Time: %BOOT_TIME%</p>
+    <p>Page Refresh Time: %CURRENT_TIME%</p>
+    <script src="/index.js"></script>
+</body>
+
+</html>

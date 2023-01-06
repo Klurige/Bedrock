@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <link rel="icon" type="image/svg" href="/favicon.svg" />
+    <style>
+        #logbox {
+            box-sizing: border-box;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body onload="onLoad()">
+    <div id="logbox">
+        <table id="logTable">
+            <thead>
+                <tr>
+                    <th>%TARGETNAME% Log</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td>-- End of log</td>
+                </tr>
+                <tfoot>
+        </table>
+    </div>
+    <script>
+        if (!!window.EventSource) {
+            var source = new EventSource('/events');
+
+            source.addEventListener('open', function (e) {
+                console.log("Events Connected");
+            }, false);
+            source.addEventListener('error', function (e) {
+                if (e.target.readyState != EventSource.OPEN) {
+                    console.log("Events Disconnected");
+                }
+            }, false);
+
+            source.addEventListener('logMessage', function (e) {
+                let logTable = document.getElementById('logTable').getElementsByTagName('tbody')[0];
+                let row = logTable.insertRow();
+                let cell1 = row.insertCell(0);
+                cell1.innerHTML = e.data;
+            }, false);
+        }
+
+        function onLoad() {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    const logMessages = this.responseText;
+                    const logArray = JSON.parse(logMessages).messages;
+                    if (logArray.length > 0) {
+                        let logTable = document.getElementById('logTable').getElementsByTagName('tbody')[0];
+                        logArray.forEach(element => {
+                            let row = logTable.insertRow();
+                            let cell1 = row.insertCell(0);
+                            cell1.innerHTML = element.timestamp + ": " + element.message;
+                        });
+                    }
+                }
+            };
+            xhttp.open("GET", "logHistory", true);
+            xhttp.send();
+        }
+    </script>
+</body>
+
+</html>

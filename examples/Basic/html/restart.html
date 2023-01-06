@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+</head>
+
+<body>
+    <p>You should be automatically redirected in <span id="seconds">x</span> seconds.
+    </p>
+    <script>
+        var seconds = 10; // Number of seconds to count down. Must be more than 0
+        var counterId;
+
+        function redirect() {
+            document.location.href = '/';
+        }
+
+        function updateSecs() {
+            document.getElementById("seconds").innerHTML = seconds;
+            seconds--;
+            if (seconds == -1) {
+                clearInterval(counterId);
+                redirect();
+            }
+        }
+
+        function countdownTimer() {
+            document.getElementById("seconds").innerHTML = seconds;
+            seconds--;
+            counterId = setInterval(function () {
+                updateSecs()
+            }, 1000);
+        }
+
+        countdownTimer();
+    </script>
+</body>
+
+</html>

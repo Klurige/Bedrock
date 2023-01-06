@@ -1,0 +1,54 @@
+.btn {
+  background: #3498db;
+  color: #fff;
+  border: none;
+  font-size: inherit;
+  cursor: pointer;
+  padding: 25px 80px;
+  display: inline-block;
+  margin: 15px 30px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  outline: none;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.btn::after {
+  position: absolute;
+  z-index: -1;
+  transition: all 0.3s;
+}
+
+.btn:hover {
+  background: #2980b9;
+}
+
+.btn:active {
+  background: #2980b9;
+  top: 2px;
+}
+
+.btn::before {
+  position: absolute;
+  left: 0;
+  top: 0;
+  line-height: 3;
+  width: 60px;
+}
+
+body {
+  background-color: #000;
+  color: whitesmoke;
+}
+
+
+#countDown {
+  width: 100;
+  padding: 50px 0;
+  text-align: center;
+  background-color: lightblue;
+  margin-top: 20px;
+  display: none;
+}

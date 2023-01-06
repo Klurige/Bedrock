@@ -1,0 +1,6 @@
+.history
+.pio
+.vscode
+html/.latest_upload
+include/bedrock_config.h
+src/bedrock_config.cpp

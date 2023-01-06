@@ -1,0 +1,32 @@
+{
+  "name": "Bedrock",
+  "version": "0.1.0",
+  "description": "A foundation library for using ESP8266 as an mqtt/sse device, including web interface and ota updates.",
+  "keywords": [
+    "mqtt",
+    "sse"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:Klurige/Bedrock.git"
+  },
+  "authors": [
+    {
+      "name": "Robert Niemi",
+      "email": "robert.den.klurige@gmail.com",
+      "url": "https://github.com/Klurige",
+      "maintainer": true
+    }
+  ],
+  "license": "GPL",
+  "homepage": "https://github.com/Klurige/Bedrock",
+  "dependencies": {
+    "knolleary/PubSubClient": "^2.8",
+    "arkhipenko/TaskScheduler": "^3.7.0",
+    "me-no-dev/ESPAsyncTCP": "^1.2.2",
+    "me-no-dev/ESP Async WebServer": "^1.2.3",
+    "sstaub/NTP": "^1.6"
+  },
+  "frameworks": "arduino",
+  "platforms": "espressif8266"
+}

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/svg" href="/favicon.svg" />
+    <link rel="stylesheet" href="/settings.css">
+    <title>ESP8266</title>
+</head>
+
+<body onload="onLoad()">
+    <h1>Settings</h1>
+    <p>Click on the submit button to submit the new value.</p>
+    <form onsubmit="handleSubmit()">
+        <label for="testParam">TestParameter: </label>
+        <input type="text" id="testParam" name="name" />
+        <input type="submit" value="Submit" />
+    </form>
+    <p>Stored TestParameter: <span id="storedTestParam">NA</span>
+    </p>
+    <script src="/settings.js"></script>
+</body>
+
+</html>

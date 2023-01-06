@@ -1,0 +1,10 @@
+.pio
+.vscode/.browse.c_cpp.db*
+.vscode/c_cpp_properties.json
+.vscode/launch.json
+.vscode/ipch
+.history
+.vscode
+html/.latest_upload
+include/config.h
+src/config.cpp

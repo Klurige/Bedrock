@@ -1,0 +1,12 @@
+# Configuration parameters. Note that passwords shouldn't be commited to the repository if you have concerns about security.
+TargetName = Bedrock_Basic
+WifiNetwork = MyWiFiNetworkName
+WifiPassword = MyWiFiNetworkPassword
+MqttServer = 192.168.1.2 # The ip where mqtt resides. Likely your Home Assistant ip.
+MqttPort = 1883 # MQTT port.
+MqttName = test # Name of device. the real name will be TargetName-NAME-macAddress
+MqttUser = mqtt_user # MQTT username, as configured in Home Assistant.
+MqttPassword = mqtt_password # MQTT Password, as configured in Home Assistant.
+WebUser = web_user # Used for web access and upload.
+WebPassword = web_password # Used for web access and upload.
+NtpServerAddress = 192.168.1.2 # An ntp server could be good to have.
