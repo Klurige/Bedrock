@@ -1,10 +1,19 @@
 {
   "name": "Bedrock",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A foundation library for using ESP8266 as an mqtt/sse device, including web interface and ota updates.",
   "keywords": [
     "mqtt",
     "sse"
+  ],
+  "examples": [
+    {
+      "name": "Basic",
+      "base": "examples/Basic",
+      "files": [
+        "README.md"
+      ]
+    }
   ],
   "repository": {
     "type": "git",
