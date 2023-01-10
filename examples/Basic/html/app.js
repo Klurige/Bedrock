@@ -33,7 +33,7 @@ function toggleLed() {
             updateLed(this.responseText);
         }
     };
-    xhttp.open("GET", "led_set?state=" + state, true);
+    xhttp.open("GET", "led_state?value=" + state, true);
     xhttp.send();
 }
 
@@ -45,7 +45,7 @@ function onLoad() {
             updateLed(this.responseText);
         }
     };
-    ledRequest.open("GET", "led_set", true);
+    ledRequest.open("GET", "led_state", true);
     ledRequest.send();
 
     var countRequest = new XMLHttpRequest();
@@ -68,8 +68,8 @@ if (!!window.EventSource) {
     source.addEventListener('led_state', function (e) {
         updateLed(e.data);
     }, false);
-    source.addEventListener('count_dir_state', function (e) {
-        console.log("Received count_dir_state");
+    source.addEventListener('count_direction', function (e) {
+        console.log("Received count_direction");
         updateCountDir(e.data);
     }, false);
     source.addEventListener('open', function (e) {

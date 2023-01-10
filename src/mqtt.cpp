@@ -20,90 +20,59 @@ typedef struct subscription {
 
 subscription subscriptions[BEDROCK_MQTT_MAX_SUBSCRIPTIONS];
 
-#define LENGTH 100          // class length, name length, mac addr(12), 2 delimiters, terminator.
-char mqttClientId[LENGTH];  // length of targetName-deviceName-macAddress.
-char expandedTopic[LENGTH];
+#define MQTT_CLIENTID_LENGTH 2 * BEDROCK_VALUE_MAX_LENGTH + 15                          // class length, name length, mac addr(12), 2 delimiters, terminator.
+#define MQTT_EXPANDED_TOPIC_LENGTH MQTT_CLIENTID_LENGTH + BEDROCK_VALUE_MAX_LENGTH + 2  // clientId length plus topic plus delimiter, terminator.
+char mqttClientId[MQTT_CLIENTID_LENGTH];                                                // systemName-deviceName-macAddress.
 WiFiClient espClient;
 PubSubClient client(espClient);
 
 void createClientId(const uint8_t *macAddress) {
     BEDROCK_DEBUG("Creating client id...");
-    char devName[BEDROCK_VALUE_MAX_LENGTH];
-    strncpy_P(devName, paramMqttName, BEDROCK_VALUE_MAX_LENGTH);
-    const char *const devClass = paramsGetTargetName();
-    BEDROCK_DEBUG("Got devClass: %s", devClass);
-    int i = 0;
-    int j = 0;
-
-    int devClassLen = strlen(devClass);
-    int devNameLen = strlen(devName);
-    while (i < devClassLen) {
-        mqttClientId[i++] = devClass[j++];
-    }
-    mqttClientId[i++] = '-';
-    j = 0;
-    while (i < devNameLen + devClassLen + 1) {
-        mqttClientId[i++] = devName[j++];
-    }
-    mqttClientId[i++] = '-';
-    j = 0;
-    while (i < devNameLen + devClassLen + 1 + 12 + 1) {
-        char digit = macAddress[j] / 16 + '0';
-        if (digit > '9') {
-            digit = digit - '0' + 'A' - 10;
-        }
-        mqttClientId[i++] = digit;
-        digit = macAddress[j++] % 16 + '0';
-        if (digit > '9') {
-            digit = digit - '0' + 'A' - 10;
-        }
-        mqttClientId[i++] = digit;
-    }
-    mqttClientId[i] = '\0';
+    size_t sysSize = paramsGetSystemName(mqttClientId, MQTT_CLIENTID_LENGTH);
+    mqttClientId[sysSize] = '-';
+    size_t devSize = paramsGetDeviceName(&mqttClientId[sysSize + 1], MQTT_CLIENTID_LENGTH - sysSize);
+    snprintf(&mqttClientId[sysSize + devSize + 1], MQTT_CLIENTID_LENGTH - (sysSize - devSize), "-%02X%02X%02X%02X%02X%02X", macAddress[0], macAddress[1], macAddress[2], macAddress[3], macAddress[4], macAddress[5]);
     BEDROCK_DEBUG("Mac Address: %02x:%02x:%02x:%02x:%02x:%02x", macAddress[0], macAddress[1], macAddress[2], macAddress[3], macAddress[4], macAddress[5]);
     BEDROCK_DEBUG("Client ID: %s", mqttClientId);
 }
 
 void createTopic(const char *tag, const char *id, char *topic) {
-    int i = 0;
-    int j = 0;
-    int idLen = strlen(id);
-    int tagLen = strlen(tag);
-
-    while (i < idLen) {
-        topic[i++] = id[j++];
-    }
-    topic[i++] = '/';
-    j = 0;
-    while (i < tagLen + idLen + 1) {
-        topic[i++] = tag[j++];
-    }
-    topic[i] = '\0';
+    strncpy(topic, id, MQTT_EXPANDED_TOPIC_LENGTH);
+    size_t idLen = strlen(topic);
+    topic[idLen] = '/';
+    strncpy(&topic[idLen+1], tag, MQTT_EXPANDED_TOPIC_LENGTH-idLen);
 }
 
 boolean mqttSubscribe(const char *const topic, void (*funptr)(const uint8_t *const, unsigned int)) {
-    for (int i = 0; i < BEDROCK_MQTT_MAX_SUBSCRIPTIONS; i++) {
-        if (subscriptions[i].topic != nullptr && strcmp(topic, subscriptions[i].topic) == 0) {
-            return false;
-        }
-    }
-    for (int i = 0; i < BEDROCK_MQTT_MAX_SUBSCRIPTIONS; i++) {
-        if (subscriptions[i].funptr == nullptr) {
-            subscriptions[i].topic = topic;
-            subscriptions[i].funptr = funptr;
-            if (client.connected()) {
-                createTopic(topic, mqttClientId, expandedTopic);
-                client.subscribe(expandedTopic);
+    char expandedTopic[MQTT_EXPANDED_TOPIC_LENGTH];  // systemName-deviceName-macAddress/topic
+    if (strlen(topic) >= BEDROCK_VALUE_MAX_LENGTH) {
+        BEDROCK_ERROR("Topic is too long, max is %d chars [%s].", BEDROCK_VALUE_MAX_LENGTH, topic);
+        return false;
+    } else {
+        for (int i = 0; i < BEDROCK_MQTT_MAX_SUBSCRIPTIONS; i++) {
+            if (subscriptions[i].topic != nullptr && strcmp(topic, subscriptions[i].topic) == 0) {
+                return false;
             }
-
-            return true;
         }
+        for (int i = 0; i < BEDROCK_MQTT_MAX_SUBSCRIPTIONS; i++) {
+            if (subscriptions[i].funptr == nullptr) {
+                subscriptions[i].topic = topic;
+                subscriptions[i].funptr = funptr;
+                if (client.connected()) {
+                    createTopic(topic, mqttClientId, expandedTopic);
+                    client.subscribe(expandedTopic);
+                }
+
+                return true;
+            }
+        }
+        BEDROCK_ERROR("Failed to subscribe. (Please check BEDROCK_MQTT_MAX_SUBSCRIPTIONS)");
+        return false;
     }
-    BEDROCK_ERROR("Failed to subscribe. (Please check BEDROCK_MQTT_MAX_SUBSCRIPTIONS)");
-    return false;
 }
 
 void mqttUnsubscribe(const char *const topic) {
+    char expandedTopic[MQTT_EXPANDED_TOPIC_LENGTH];  // systemName-deviceName-macAddress/topic
     BEDROCK_DEBUG("Unsubscribing to %s", topic);
 
     for (int i = 0; i < BEDROCK_MQTT_MAX_SUBSCRIPTIONS; i++) {
@@ -120,10 +89,15 @@ void mqttUnsubscribe(const char *const topic) {
 }
 
 void mqttPublish(const char *const topic, const uint8_t *const payload, unsigned int length, boolean isRetain) {
-    if (client.connected()) {
-        createTopic(topic, mqttClientId, expandedTopic);
-        BEDROCK_DEBUG("Publishing: topic:%s", expandedTopic);
-        client.publish(expandedTopic, payload, length, isRetain);
+    char expandedTopic[MQTT_EXPANDED_TOPIC_LENGTH];  // systemName-deviceName-macAddress/topic
+    if (strlen(topic) >= BEDROCK_VALUE_MAX_LENGTH) {
+        BEDROCK_ERROR("Topic is too long, max is %d chars [%s].", BEDROCK_VALUE_MAX_LENGTH, topic);
+    } else {
+        if (client.connected()) {
+            createTopic(topic, mqttClientId, expandedTopic);
+            BEDROCK_DEBUG("Publishing: topic:%s", expandedTopic);
+            client.publish(expandedTopic, payload, length, isRetain);
+        }
     }
 }
 
@@ -142,6 +116,7 @@ void topicReceived(char *topic, byte *payload, unsigned int length) {
 long lastReconnectAttempt = 0;
 
 boolean reconnect() {
+    char expandedTopic[MQTT_EXPANDED_TOPIC_LENGTH];  // systemName-deviceName-macAddress/topic
     char username[BEDROCK_VALUE_MAX_LENGTH];
     char password[BEDROCK_VALUE_MAX_LENGTH];
     strncpy_P(username, paramMqttUser, BEDROCK_VALUE_MAX_LENGTH);

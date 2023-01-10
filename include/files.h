@@ -16,6 +16,6 @@ void filesListContents();
 void filesOnUpload(const String& filename, size_t index, uint8_t* data, size_t len, bool final);
 void filesApplyFirmware();
 int filesValidate(String filename, char* signature, int length);
-void filesGetKeyValue(const char* const key, char* targetName, int size);
+void filesGetKeyValue(const char* const key, char* value, int size);
 bool filesSetKeyValue(const char* const key, const char* const value);
 #endif  // __BEDROCK_FILES_H__

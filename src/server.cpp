@@ -40,8 +40,8 @@ void (*requestQueue[MAX_SERVER_CALLBACKS])(void);
 int requestQueueHead = 0;
 int requestQueueTail = 0;
 
-char username[32];
-char password[32];
+char username[BEDROCK_VALUE_MAX_LENGTH];
+char password[BEDROCK_VALUE_MAX_LENGTH];
 
 void initRequestQueue() {
     for (int i = 0; i < MAX_SERVER_CALLBACKS; i++) {
@@ -123,16 +123,28 @@ bool isAuthenticated(AsyncWebServerRequest* request) {
 }
 
 String getTargetName() {
-    return String(paramsGetTargetName());
+    char buffer[2 * BEDROCK_VALUE_MAX_LENGTH];
+    size_t sysSize = paramsGetSystemName(buffer, BEDROCK_VALUE_MAX_LENGTH);
+    buffer[sysSize] = '-';
+    paramsGetDeviceName(&buffer[sysSize + 1], BEDROCK_VALUE_MAX_LENGTH);
+    return String(buffer);
 }
 
 String templateProcessor(const String& var) {
+    char buf[BEDROCK_VALUE_MAX_LENGTH];
     if (var == F("VERSION")) return FPSTR(paramVersion);
     if (var == F("BUILD_TIMESTAMP")) return FPSTR(paramBuildTimestamp);
     if (var == F("BOOT_TIME")) return bootTime;
     if (var == F("CURRENT_TIME")) return serverGetFormattedTime();
     if (var == F("TARGETNAME")) return getTargetName();
-    if (var == F("MQTTNAME")) return FPSTR(paramMqttName);
+    if (var == F("SYSTEMNAME")) {
+        paramsGetSystemName(buf, BEDROCK_VALUE_MAX_LENGTH);
+        return String(buf);
+    }
+    if (var == F("DEVICENAME")) {
+        paramsGetDeviceName(buf, BEDROCK_VALUE_MAX_LENGTH);
+        return String(buf);
+    }
     if (var == F("MQTTCLIENTID")) return FPSTR(mqttClientId);
     return String();
 }
@@ -206,7 +218,7 @@ void serverRegister(const char* const path, const char* const arg, const char* c
     if (sseEventCallbackIndex == BEDROCK_SSE_MAX_EVENTS) {
         BEDROCK_ERROR("Too many sse events registered. Increase BEDROCK_SSE_MAX_EVENTS");
     } else {
-        BEDROCK_DEBUG("path = %s, arg = %s, callback = %lu", path, arg, (unsigned long)callback);
+        BEDROCK_DEBUG("path = %s, arg = %s, callback = %lu", path, (arg != NULL)?arg:"NULL", (unsigned long)callback);
         sseEventCallbacks[sseEventCallbackIndex].path = path;
         sseEventCallbacks[sseEventCallbackIndex].arg = arg;
         sseEventCallbacks[sseEventCallbackIndex].callback = callback;
@@ -255,8 +267,8 @@ bool serverSetup() {
     strncpy_P(ntpAddress, paramNtpServerAddress, BEDROCK_VALUE_MAX_LENGTH);
     timeClient.begin(ntpAddress);
 
-    strncpy_P(username, paramWebUser, 32);
-    strncpy_P(password, paramWebPassword, 32);
+    strncpy_P(username, paramWebUser, BEDROCK_VALUE_MAX_LENGTH);
+    strncpy_P(password, paramWebPassword, BEDROCK_VALUE_MAX_LENGTH);
 
     initRequestQueue();
 

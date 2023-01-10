@@ -1,7 +1,7 @@
 #ifndef __BEDROCK_MQTT_H__
 #define __BEDROCK_MQTT_H__
 
-extern char mqttClientId[];  // targetName-deviceName-macAddress.
+extern char mqttClientId[];  // systemName-deviceName-macAddress.
 
 bool mqttSetup();
 void mqttLoop();

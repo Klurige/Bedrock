@@ -6,7 +6,6 @@
 
 extern const char* paramMqttServer;
 extern int paramMqttPort;
-extern const char* paramMqttName;
 extern const char* paramMqttUser;
 extern const char* paramMqttPassword;
 extern const char* paramVersion;
@@ -19,6 +18,7 @@ extern const char* paramWebPassword;
 extern const char* paramNtpServerAddress;
 
 void paramsInitialise(const char* const params[][2]);
-const char* const paramsGetTargetName();
+size_t paramsGetSystemName(char* const param, size_t size);
+size_t paramsGetDeviceName(char* const param, size_t size);
 
 #endif  // __BEDROCK_PARAMS_H__

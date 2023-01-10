@@ -36,23 +36,19 @@ static const char *const mqtt_publish_measurement = &measurement[1];
 
 // Led, on or off.
 static const char *const led_state = "/led_state";
-static const char *const led_set = "/led_set";
-static const char *const event_led_state = &led_state[1];
+static const char *const event_led = &led_state[1];
 static const char *const mqtt_publish_led_state = &led_state[1];
-static const char *const sse_register_led_set = led_set;
-static const char *const mqtt_subscribe_led_set = &led_set[1];
+static const char *const mqtt_subscribe_led_set = "led_set";
 static const char *const payload_led_on = "on";
 static const int payload_led_on_length = 2;
 static const char *const payload_led_off = "off";
 static const int payload_led_off_length = 3;
 
 // Count direction (measurement), up or down.
-static const char *const count_dir_state = "/count_dir_state";
-static const char *const count_dir_set = "/count_dir_set";
+static const char *const count_dir_state = "/count_direction";
 static const char *const event_count_dir = &count_dir_state[1];
 static const char *const mqtt_publish_count_dir = &count_dir_state[1];
-static const char *const sse_register_count_dir = count_dir_set;
-static const char *const mqtt_subscribe_count_dir = &count_dir_set[1];
+static const char *const mqtt_subscribe_count_dir = "count_dir_set";
 static const char *const payload_count_up = "up";
 static const int payload_count_up_length = 2;
 static const char *const payload_count_down = "down";
@@ -74,12 +70,12 @@ const char *const led_toggle(const uint8_t *const payload, unsigned int length) 
     BEDROCK_DEBUG("Toggle the LED: {%s}", (char *)payload);
     if (strncmp(payload_led_on, (char *)payload, payload_led_on_length) == 0) {
         digitalWrite(LED_BUILTIN, LOW);
-        bedrockSendEvent(event_led_state, payload_led_on);
+        bedrockSendEvent(event_led, payload_led_on);
         bedrockPublish(mqtt_publish_led_state, (uint8_t *)payload_led_on, payload_led_on_length, true);
         return payload_led_on;
     } else if (strncmp(payload_led_off, (char *)payload, payload_led_off_length) == 0) {
         digitalWrite(LED_BUILTIN, HIGH);
-        bedrockSendEvent(event_led_state, payload_led_off);
+        bedrockSendEvent(event_led, payload_led_off);
         bedrockPublish(mqtt_publish_led_state, (uint8_t *)payload_led_off, payload_led_off_length, true);
         return payload_led_off;
     } else {
@@ -132,6 +128,13 @@ const char *const sse_count_dir_toggle(const char *const param) {
     return count_dir_toggle((uint8_t *)param, -1);
 }
 
+static char measurementPayload[32];
+
+const char *const getMeasurement(const char *const param) {
+    snprintf((char *)measurementPayload, 32, "%d", sample);
+    return measurementPayload;
+}
+
 void appLoop() {
     if (isCountUp) {
         if (sample < 1100) {
@@ -143,21 +146,22 @@ void appLoop() {
         }
     }
 
-    snprintf((char *)payload, 32, "%d", sample);
-    BEDROCK_DEBUG("Sending event: [%s] -> {%s}", event_measurement, payload);
-    bedrockSendEvent(event_measurement, (char *)payload);
+    const char *const measurement = getMeasurement(NULL);
+    BEDROCK_DEBUG("Sending event: [%s] -> {%s}", event_measurement, measurement);
+    bedrockSendEvent(event_measurement, measurement);
 
-    int length = strlen((char *)payload);
-    BEDROCK_DEBUG("Publishing: [%s] -> {%s} %d bytes", mqtt_publish_measurement, payload, length);
-    bedrockPublish(mqtt_publish_measurement, payload, length, false);
+    int length = strlen(measurement);
+    BEDROCK_DEBUG("Publishing: [%s] -> {%s} %d bytes", mqtt_publish_measurement, measurement, length);
+    bedrockPublish(mqtt_publish_measurement, (const uint8_t *)measurement, length, false);
 }
 
 bool appSetup() {
     pinMode(LED_BUILTIN, OUTPUT);
 
     BEDROCK_DEBUG("Register server events and mqtt subscriptions.");
-    bedrockRegisterEvent(sse_register_led_set, "state", sse_led_toggle);
-    bedrockRegisterEvent(sse_register_count_dir, "state", sse_count_dir_toggle);
+    bedrockRegisterEvent(measurement, NULL, getMeasurement);
+    bedrockRegisterEvent(led_state, "value", sse_led_toggle);
+    bedrockRegisterEvent(count_dir_state, "value", sse_count_dir_toggle);
 
     bedrockSubscribe(mqtt_subscribe_led_set, mqtt_led_toggle);
     bedrockSubscribe(mqtt_subscribe_count_dir, mqtt_count_dir_toggle);

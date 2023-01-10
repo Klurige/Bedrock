@@ -1,1 +1,3 @@
-../examples/Basic/src/main.cpp
+#ifdef BEDROCK_DEVELOPMENT
+#include "../examples/Basic/src/main.cpp"
+#endif  // BEDROCK_DEVELOPMENT

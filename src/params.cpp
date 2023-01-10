@@ -13,11 +13,11 @@
  */
 
 const char* paramWifiNetwork;
-const char* paramTargetName;
+const char* paramSystemName;
+const char* paramDeviceName;
 const char* paramWifiPassword;
 const char* paramMqttServer;
 int paramMqttPort;
-const char* paramMqttName;
 const char* paramMqttUser;
 const char* paramMqttPassword;
 const char* paramWebUser;
@@ -51,8 +51,11 @@ void paramsInitialise(const char* const params[][2]) {
                 case 'P':
                     paramPublicKey = params[paramIndex][1];
                     break;
-                case 'T':
-                    paramTargetName = params[paramIndex][1];
+                case 'S':
+                    paramSystemName = params[paramIndex][1];
+                    break;
+                case 'D':
+                    paramDeviceName = params[paramIndex][1];
                     break;
                 case 'M':
                     switch (key[7]) {
@@ -62,9 +65,6 @@ void paramsInitialise(const char* const params[][2]) {
                         case 't':
                             strncpy_P(key, params[paramIndex][1], BEDROCK_KEY_MAX_LENGTH);
                             paramMqttPort = atoi(key);
-                            break;
-                        case 'e':
-                            paramMqttName = params[paramIndex][1];
                             break;
                         case 'r':
                             paramMqttUser = params[paramIndex][1];
@@ -102,14 +102,28 @@ void paramsInitialise(const char* const params[][2]) {
     }
 }
 
-char* customTargetName = NULL;
-const char* const paramsGetTargetName() {
-    if (customTargetName == NULL) {
-        customTargetName = (char*)calloc(BEDROCK_KEY_MAX_LENGTH, 1);
-        filesGetKeyValue("targetName", customTargetName, BEDROCK_KEY_MAX_LENGTH);
-        if (strlen(customTargetName) == 0) {
-            strncpy_P(customTargetName, paramTargetName, BEDROCK_VALUE_MAX_LENGTH);
+void getParamFromStorageOrConfig(const char* const paramName, const char* const configParam, char* const param) {
+    char storedName[BEDROCK_KEY_MAX_LENGTH];
+
+    filesGetKeyValue(paramName, storedName, BEDROCK_KEY_MAX_LENGTH);
+    if (storedName[0] == '\0') {
+        if (param[0] == '\0') {
+            strncpy_P(param, configParam, BEDROCK_VALUE_MAX_LENGTH);
+        }
+    } else {
+        if (strncmp(param, storedName, BEDROCK_KEY_MAX_LENGTH) != 0) {
+            strncpy(param, storedName, BEDROCK_KEY_MAX_LENGTH);
         }
     }
-    return customTargetName;
+    param[BEDROCK_KEY_MAX_LENGTH - 1] = '\0';
+}
+
+size_t paramsGetSystemName(char* const param, size_t size) {
+    strncpy_P(param, paramSystemName, BEDROCK_VALUE_MAX_LENGTH);
+    return strlen(param);
+}
+
+size_t paramsGetDeviceName(char* const param, size_t size) {
+    getParamFromStorageOrConfig("DeviceName", paramDeviceName, param);
+    return strlen(param);
 }
