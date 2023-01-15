@@ -40,7 +40,7 @@ void createTopic(const char *tag, const char *id, char *topic) {
     strncpy(topic, id, MQTT_EXPANDED_TOPIC_LENGTH);
     size_t idLen = strlen(topic);
     topic[idLen] = '/';
-    strncpy(&topic[idLen+1], tag, MQTT_EXPANDED_TOPIC_LENGTH-idLen);
+    strncpy(&topic[idLen + 1], tag, MQTT_EXPANDED_TOPIC_LENGTH - idLen);
 }
 
 boolean mqttSubscribe(const char *const topic, void (*funptr)(const uint8_t *const, unsigned int)) {
@@ -88,15 +88,21 @@ void mqttUnsubscribe(const char *const topic) {
     }
 }
 
-void mqttPublish(const char *const topic, const uint8_t *const payload, unsigned int length, boolean isRetain) {
+bool mqttPublish(const char *const topic, const uint8_t *const payload, unsigned int length, bool isRetain) {
     char expandedTopic[MQTT_EXPANDED_TOPIC_LENGTH];  // systemName-deviceName-macAddress/topic
     if (strlen(topic) >= BEDROCK_VALUE_MAX_LENGTH) {
         BEDROCK_ERROR("Topic is too long, max is %d chars [%s].", BEDROCK_VALUE_MAX_LENGTH, topic);
+        return false;
     } else {
         if (client.connected()) {
             createTopic(topic, mqttClientId, expandedTopic);
-            BEDROCK_DEBUG("Publishing: topic:%s", expandedTopic);
-            client.publish(expandedTopic, payload, length, isRetain);
+            BEDROCK_DEBUG("Publishing: topic: %s", expandedTopic);
+            bool isPublished = client.publish(expandedTopic, payload, length, isRetain);
+            BEDROCK_ERROR("Failed to publish topic: %s", expandedTopic);
+            return isPublished;
+        } else {
+            BEDROCK_ERROR("Failed to publish - not connected.");
+            return false;
         }
     }
 }

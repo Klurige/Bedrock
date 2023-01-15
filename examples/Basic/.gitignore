@@ -6,5 +6,5 @@
 .history
 .vscode
 html/.latest_upload
-include/config.h
-src/config.cpp
+include/bedrock_config.h
+src/bedrock_config.cpp

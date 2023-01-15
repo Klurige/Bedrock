@@ -78,8 +78,8 @@ if (!!window.EventSource) {
     }, false);
     source.addEventListener('error', function (e) {
         if (e.target.readyState != EventSource.OPEN) {
-            console.log("Events Disconnected");
             numLost++;
+            console.log("Events Disconnected: " + numLost);
             document.getElementById("numLost").innerHTML = numLost;
         }
     }, false);

@@ -65,8 +65,8 @@ void bedrockSendEvent(const char* const label, const char* const message) {
 boolean bedrockSubscribe(const char* const topic, void (*funptr)(const uint8_t* const, unsigned int)) {
     return mqttSubscribe(topic, funptr);
 }
-void bedrockPublish(const char* const topic, const uint8_t* const payload, unsigned int length, boolean isRetain) {
-    mqttPublish(topic, payload, length, isRetain);
+bool bedrockPublish(const char* const topic, const uint8_t* const payload, unsigned int length, boolean isRetain) {
+    return mqttPublish(topic, payload, length, isRetain);
 }
 
 void bedrockSetup() {

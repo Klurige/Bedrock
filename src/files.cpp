@@ -219,7 +219,7 @@ bool filesSetKeyValue(const char* const key, const char* const value) {
     }
 }
 
-void filesGetKeyValue(const char* const key, char* value, int size) {
+bool filesGetKeyValue(const char* const key, char* value, int size) {
     value[0] = '\0';
     char buffer[2 * BEDROCK_KEY_MAX_LENGTH];
     snprintf(buffer, 2 * BEDROCK_KEY_MAX_LENGTH, "/config/%s", key);
@@ -232,7 +232,9 @@ void filesGetKeyValue(const char* const key, char* value, int size) {
         BEDROCK_DEBUG("Read %d bytes: [%s]", numRead, buffer);
         strncpy(value, buffer, size);
         BEDROCK_DEBUG("Found key-value: [%s] = [%s]", key, value);
+        return true;
     } else {
-        BEDROCK_ERROR("Failed to open config file.");
+        BEDROCK_DEBUG("Failed to open config file.");
+        return false;
     }
 }

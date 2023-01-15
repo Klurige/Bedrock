@@ -5,7 +5,7 @@ extern char mqttClientId[];  // systemName-deviceName-macAddress.
 
 bool mqttSetup();
 void mqttLoop();
-boolean mqttSubscribe(const char* const topic, void (*funptr)(const uint8_t* const, unsigned int));
+bool mqttSubscribe(const char* const topic, void (*funptr)(const uint8_t* const, unsigned int));
 void mqttUnsubscribe(const char* const topic);
-void mqttPublish(const char* const topic, const uint8_t* const payload, unsigned int length, boolean isRetain);
+bool mqttPublish(const char* const topic, const uint8_t* const payload, unsigned int length, bool isRetain);
 #endif  // __BEDROCK_MQTT_H__

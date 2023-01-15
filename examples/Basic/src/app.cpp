@@ -2,7 +2,7 @@
 #include <bedrock.h>
 #include <string.h>
 
-#define BEDROCK_DEBUG
+#define BEDROCK_LOG
 #include <log.h>
 
 /**
@@ -21,8 +21,6 @@
 int appPeriodMs = 5000;
 static int sample = 0;
 static bool isCountUp = false;
-
-static uint8_t payload[32];
 
 /*
   Things coming in and going out.
