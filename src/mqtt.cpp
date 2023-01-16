@@ -153,7 +153,12 @@ bool mqttSetup() {
     strncpy_P(mqttServer, paramMqttServer, BEDROCK_VALUE_MAX_LENGTH);
     client.setServer(mqttServer, paramMqttPort);
     client.setCallback(topicReceived);
-    return true;
+    bool isOk = true;
+#if BEDROCK_MQTT_MAX_PACKET_SIZE > 256
+    isOk = client.setBufferSize(BEDROCK_MQTT_MAX_PACKET_SIZE);
+    if (!isOk) BEDROCK_ERROR("Failed to set MQTT buffer size to %d", BEDROCK_MQTT_MAX_PACKET_SIZE);
+#endif
+    return isOk;
 }
 
 void mqttLoop() {
