@@ -26,6 +26,18 @@ char mqttClientId[MQTT_CLIENTID_LENGTH];                                        
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+static void (*connectCallback)(bool);
+
+void reportConnectionState() {
+    if (connectCallback != NULL) {
+        connectCallback(client.connected());
+    }
+}
+void mqttConnectCallback(void (*funptr)(bool)) {
+    connectCallback = funptr;
+    reportConnectionState();
+}
+
 void createClientId(const uint8_t *macAddress) {
     BEDROCK_DEBUG("Creating client id...");
     size_t sysSize = paramsGetSystemName(mqttClientId, MQTT_CLIENTID_LENGTH);
@@ -61,6 +73,8 @@ boolean mqttSubscribe(const char *const topic, void (*funptr)(const uint8_t *con
                 if (client.connected()) {
                     createTopic(topic, mqttClientId, expandedTopic);
                     client.subscribe(expandedTopic);
+                } else {
+                    reportConnectionState();
                 }
 
                 return true;
@@ -83,6 +97,8 @@ void mqttUnsubscribe(const char *const topic) {
             if (client.connected()) {
                 createTopic(topic, mqttClientId, expandedTopic);
                 client.unsubscribe(expandedTopic);
+            } else {
+                reportConnectionState();
             }
         }
     }
@@ -102,6 +118,7 @@ bool mqttPublish(const char *const topic, const uint8_t *const payload, unsigned
             return isPublished;
         } else {
             BEDROCK_ERROR("Failed to publish - not connected.");
+            reportConnectionState();
             return false;
         }
     }
@@ -129,6 +146,8 @@ boolean reconnect() {
     strncpy_P(password, paramMqttPassword, BEDROCK_VALUE_MAX_LENGTH);
     if (client.connect(mqttClientId, username, password)) {
         BEDROCK_DEBUG("mqtt broker connected");
+        reportConnectionState();
+
         for (int i = 0; i < BEDROCK_MQTT_MAX_SUBSCRIPTIONS; i++) {
             if (subscriptions[i].topic != nullptr) {
                 createTopic(subscriptions[i].topic, mqttClientId, expandedTopic);
@@ -137,11 +156,14 @@ boolean reconnect() {
         }
     } else {
         BEDROCK_ERROR("mqtt broker failed with state %d", client.state());
+        reportConnectionState();
     }
     return client.connected();
 }
 
 bool mqttSetup() {
+    connectCallback = NULL;
+
     static char mqttServer[BEDROCK_VALUE_MAX_LENGTH];
 
     uint8_t macAddress[6];

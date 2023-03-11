@@ -5,6 +5,7 @@ extern char mqttClientId[];  // systemName-deviceName-macAddress.
 
 bool mqttSetup();
 void mqttLoop();
+void mqttConnectCallback(void (*funptr)(bool));
 bool mqttSubscribe(const char* const topic, void (*funptr)(const uint8_t* const, unsigned int));
 void mqttUnsubscribe(const char* const topic);
 bool mqttPublish(const char* const topic, const uint8_t* const payload, unsigned int length, bool isRetain);

@@ -62,6 +62,9 @@ void bedrockSendEvent(const char* const label, const char* const message) {
     serverSendEvent(label, message);
 }
 
+void bedrockConnectCallback(void (*funptr)(bool)) {
+    mqttConnectCallback(funptr);
+}
 boolean bedrockSubscribe(const char* const topic, void (*funptr)(const uint8_t* const, unsigned int)) {
     return mqttSubscribe(topic, funptr);
 }
