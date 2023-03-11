@@ -98,7 +98,7 @@ bool mqttPublish(const char *const topic, const uint8_t *const payload, unsigned
             createTopic(topic, mqttClientId, expandedTopic);
             BEDROCK_DEBUG("Publishing: topic: %s", expandedTopic);
             bool isPublished = client.publish(expandedTopic, payload, length, isRetain);
-            BEDROCK_ERROR("Failed to publish topic: %s", expandedTopic);
+            if (!isPublished) BEDROCK_ERROR("Failed to publish topic: %s", expandedTopic);
             return isPublished;
         } else {
             BEDROCK_ERROR("Failed to publish - not connected.");
